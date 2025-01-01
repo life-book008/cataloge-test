@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            height: 100%;
+            background-color: white;
+            border: none;
+        }
+        .select-container {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .select-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .species-section {
+            display: none;
+            padding: 20px 0;
+        }
+        .species-section.show {
+            display: block;
+        }
+        .species-details {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        .species-details.show {
+            display: block;
+        }
+        .bi {
+            margin-left: 8px;
+        }
+        .references {
+            border-top: 1px solid #dee2e6;
+            margin-top: 1rem;
+            padding-top: 1rem;
+        }
+        .references a {
+            text-decoration: none;
+            margin: 0.1rem;
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: background-color 0.2s;
+        }
+        .references a:hover {
+            text-decoration: none;
+            background-color: #f8f9fa;
+        }
+        .reference-link {
+            color: #0d6efd;
+        }
+        .image-link {
+            color: #198754;
+        }
+        .species-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        .species-card {
+            background: white;
+            transition: transform 0.2s;
+        }
+        .species-name-ar {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+        .species-name-en {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+        @media (max-width: 1200px) {
+            .species-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .species-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 0 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem !important;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            .form-label {
+                font-size: 0.9rem;
+            }
+            .species-name-ar {
+                font-size: 1.3rem;
+            }
+            .species-name-en {
+                font-size: 1.1rem;
+            }
+            .references a {
+                display: block;
+                text-align: center;
+                margin: 0.5rem 0;
+                padding: 0.75rem;
+                background-color: #f8f9fa;
+            }
+        }
+        @media (max-width: 576px) {
+            .container {
+                padding: 5px;
+            }
+            h1 {
+                font-size: 1.2rem;
+            }
+            .card-body {
+                padding: 0.75rem;
+            }
+            .species-grid {
+                gap: 0.75rem;
+            }
+        }
+        .btn-primary {
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+        }
+        .species-info-section {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .info-label {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .info-text {
+            color: #34495e;
+            line-height: 1.6;
+        }
+        .info-text-secondary {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+        }
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .search-results.show {
+            display: block;
+        }
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #eee;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+        .search-result-item .result-name-ar {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .search-result-item .result-name-en {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        .search-result-item .result-path {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            margin-top: 0.25rem;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        .local-names {
+            font-size: 0.9rem;
+            color: #666;
+            margin-right: 0.5rem;
+        }
+        .species-local-names {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+        .video-link {
+            color: #e74c3c;
+        }
+        .video-link:hover {
+            color: #c0392b;
+            background-color: #fee;
+        }
+
+        /* Simple highlight effect */
+        @keyframes simpleHighlight {
+            0% { background-color: #fff3cd; }
+            70% { background-color: #fff3cd; }
+            100% { background-color: transparent; }
+        }
+
+        .highlight-species {
+            animation: simpleHighlight 1.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-3">
+        <h1 class="text-center mb-4">
+            <i class="bi bi-diagram-3"></i>
+الأنواع الحية المسجلة في المملكة العربية السعودية        </h1>
+
+        <div class="search-container">
+            <input type="text" 
+                   class="search-input" 
+                   placeholder="ابحث عن الأنواع .. | Search for species..."
+                   id="searchInput"
+                   autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="select-container active mb-3">
+                            <label class="form-label fw-bold">
+                                المملكة | Kingdom
+                            </label>
+                            <select class="form-select" id="kingdom"></select>
+                        </div>
+
+                        <div class="select-container mb-3">
+                            <label class="form-label fw-bold">
+                                الشعبة | Phylum
+                            </label>
+                            <select class="form-select" id="phylum"></select>
+                        </div>
+
+                        <div class="select-container mb-3">
+                            <label class="form-label fw-bold">
+                                الصف | Class
+                            </label>
+                            <select class="form-select" id="class"></select>
+                        </div>
+
+                        <div class="select-container mb-3">
+                            <label class="form-label fw-bold">
+                                الرتبة | Order
+                            </label>
+                            <select class="form-select" id="order"></select>
+                        </div>
+
+                        <div class="select-container mb-3">
+                            <label class="form-label fw-bold">
+                                العائلة | Family
+                            </label>
+                            <select class="form-select" id="family"></select>
+                        </div>
+
+                        <div class="select-container mb-3">
+                            <label class="form-label fw-bold">
+                                الجنس | Genus
+                            </label>
+                            <select class="form-select" id="genus"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="speciesSection" class="species-section">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-star"></i>
+                الأنواع المسجلة
+            </h2>
+            <div id="speciesGrid" class="species-grid">
+                <!-- Species cards will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <template id="speciesCardTemplate">
+        <div class="card species-card">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h3 class="species-name-ar mb-2"></h3>
+                    <h4 class="species-name-en mb-3"></h4>
+                    <button class="btn btn-primary show-details-btn">
+                        <i class="bi bi-info-circle"></i>
+                        مزيد من التفاصيل
+                    </button>
+                </div>
+                
+                <div class="species-details">
+                    <div class="species-info-section">
+                        <div class="info-label">
+                            <i class="bi bi-card-text"></i>
+                            الوصف
+                        </div>
+                        <div class="species-description info-text"></div>
+                    </div>
+                    
+                    <div class="species-info-section">
+                        <div class="info-label">
+                            <i class="bi bi-geo-alt"></i>
+                            الانتشار الجغرافي
+                        </div>
+                        <div class="species-habitat info-text"></div>
+                    </div>
+                    
+                    <div class="species-info-section">
+                        <div class="info-label">
+                            <i class="bi bi-diagram-3"></i>
+                            مستويات التصنيف 
+                        </div>
+                        <div class="species-classification info-text" dir="ltr"></div>
+                    </div>
+                    
+                    <div class="references text-center species-references">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <footer class="bg-light py-4 mt-5 border-top">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>مواقع مفيدة </h5>
+                    <ul class="list-unstyled">
+                        <li><a href="index.html" class="text-decoration-none">الرئيسية</a></li>
+                        <li><a href="about.html" class="text-decoration-none">عن الموقع</a></li>
+                        <li><a href="contribute.html" class="text-decoration-none">المساهمة</a></li>
+                        <li><a href="privacy.html" class="text-decoration-none">سياسة الخصوصية</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5> للتواصل</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="mailto:contact@example.com" class="text-decoration-none"><i class="bi bi-envelope me-2"></i>البريد الإلكتروني</a></li>
+                        <li><a href="https://twitter.com/example" class="text-decoration-none" target="_blank"><i class="bi bi-twitter me-2"></i>تويتر</a></li>
+                        <li><a href="https://github.com/example" class="text-decoration-none" target="_blank"><i class="bi bi-github me-2"></i>GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>//* </h5>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-code-slash me-2"></i> مفتوح المصدر</li>
+                        <li id="last-modified"><i class="bi bi-clock-history me-2"></i>آخر تحديث: <span></span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

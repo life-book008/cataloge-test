@@ -1,0 +1,264 @@
+{
+  "taxonomy": [
+    {
+      "Kingdom": {
+        "Arabic": "الحيوانات",
+        "English": "Animalia"
+      },
+      "Phylum": {
+        "Arabic": "الحبليات",
+        "English": "Chordata"
+      },
+      "Class": {
+        "Arabic": "الثدييات",
+        "English": "Mammalia"
+      },
+      "Order": {
+        "Arabic": "اللواحم",
+        "English": "Carnivora"
+      },
+      "Family": {
+        "Arabic": "القططيات",
+        "English": "Felidae"
+      },
+      "Genus": {
+        "Arabic": "النمر",
+        "English": "Panthera"
+      },
+      "Species": {
+        "Arabic": "النمر العربي",
+        "English": "Arabian Leopard",
+        "LocalNames": {
+          "Arabic": [
+            "النمر العربي",
+            "النمر",
+            "بنر"
+          ],
+          "Regional": [
+            {
+              "Name": "نمر",
+              "Region": "السعودية"
+            }
+          ]
+        },
+        "Description": {
+          "Arabic": "النمر العربي هو أحد الثدييات المفترسة النادرة",
+          "English": ""
+        },
+        "Habitat": {
+          "Arabic": "المناطق الجبلية الوعرة في شبه الجزيرة العربية",
+          "English": ""
+        },
+        "References": [
+          {
+            "Title": "موسوعة الحياة البرية",
+            "URL": "https://example.com/arabian-leopard",
+            "Type": "reference"
+          }
+        ],
+        "Media": {
+          "Images": [
+            {
+              "URL": "https://example.com/leopard1.jpg",
+              "Caption": {
+                "Arabic": "نمر عربي بالغ"
+              }
+            },
+            {
+              "URL": "https://example.com/leopard1.jpg",
+              "Caption": {
+                "Arabic": "نمر عربي بالغ"
+              }
+            }
+          ],
+          "Videos": [
+            {
+              "URL": "https://example.com/leopard-video.mp4",
+              "Caption": {
+                "Arabic": "النمر العربي في موطنه الطبيعي"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Kingdom": {
+        "Arabic": "الحيوانات",
+        "English": "Animalia"
+      },
+      "Phylum": {
+        "Arabic": "الحبليات",
+        "English": "Chordata"
+      },
+      "Class": {
+        "Arabic": "الثدييات",
+        "English": "Mammalia"
+      },
+      "Order": {
+        "Arabic": "اللواحم",
+        "English": "Carnivora"
+      },
+      "Family": {
+        "Arabic": "القططيات",
+        "English": "Felidae"
+      },
+      "Genus": {
+        "Arabic": "النمر",
+        "English": "Panthera"
+      },
+      "Species": {
+        "Arabic": "النمر العربي",
+        "English": "Arabian Leopard",
+        "LocalNames": {
+          "Arabic": [
+            "النمر العربي",
+            "النمر"
+          ],
+          "Regional": [
+            {
+              "Name": "نمر",
+              "Region": "مكة"
+            },
+            {
+              "Name": "منر",
+              "Region": "جدة"
+            }
+          ]
+        },
+        "Description": {
+          "Arabic": "النمر العربي هو أحد الثدييات المفترسة النادرة",
+          "English": ""
+        },
+        "Habitat": {
+          "Arabic": "المناطق الجبلية الوعرة في شبه الجزيرة العربية",
+          "English": ""
+        },
+        "References": [
+          {
+            "Title": "موسوعة الحياة البرية",
+            "URL": "https://example.com/arabian-leopard",
+            "Type": "reference"
+          },
+          {
+            "Title": "موسوعة الحياة البرية",
+            "URL": "https://example.com/arabian-leopard",
+            "Type": "reference"
+          }
+        ],
+        "Media": {
+          "Images": [
+            {
+              "URL": "https://example.com/leopard1.jpg",
+              "Caption": {
+                "Arabic": "نمر عربي بالغ"
+              }
+            }
+          ],
+          "Videos": [
+            {
+              "URL": "https://example.com/leopard-video.mp4",
+              "Caption": {
+                "Arabic": "النمر العربي في موطنه الطبيعي"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Kingdom": {
+        "Arabic": "الحيوانات",
+        "English": "Animalia"
+      },
+      "Phylum": {
+        "Arabic": "الحبليات",
+        "English": "Chordata"
+      },
+      "Class": {
+        "Arabic": "الثدييات",
+        "English": "Mammalia"
+      },
+      "Order": {
+        "Arabic": "اللواحم",
+        "English": "Carnivora"
+      },
+      "Family": {
+        "Arabic": "القططيات",
+        "English": "Felidae"
+      },
+      "Genus": {
+        "Arabic": "النمر",
+        "English": "Panthera"
+      },
+      "Species": {
+        "Arabic": "النمر العربي",
+        "English": "Arabian Leopard",
+        "LocalNames": {
+          "Arabic": [],
+          "Regional": []
+        },
+        "Description": {
+          "Arabic": "",
+          "English": ""
+        },
+        "Habitat": {
+          "Arabic": "",
+          "English": ""
+        },
+        "References": [],
+        "Media": {
+          "Images": [],
+          "Videos": []
+        }
+      }
+    },
+    {
+      "Kingdom": {
+        "Arabic": "الحيوانات",
+        "English": "Animalia"
+      },
+      "Phylum": {
+        "Arabic": "الحبليات",
+        "English": "Chordata"
+      },
+      "Class": {
+        "Arabic": "الثدييات",
+        "English": "Mammalia"
+      },
+      "Order": {
+        "Arabic": "اللواحم",
+        "English": "Carnivora"
+      },
+      "Family": {
+        "Arabic": "القططيات",
+        "English": "Felidae"
+      },
+      "Genus": {
+        "Arabic": "النمر",
+        "English": "Panthera"
+      },
+      "Species": {
+        "Arabic": "النمر العربي",
+        "English": "Arabian Leopard",
+        "LocalNames": {
+          "Arabic": [],
+          "Regional": []
+        },
+        "Description": {
+          "Arabic": "",
+          "English": ""
+        },
+        "Habitat": {
+          "Arabic": "",
+          "English": ""
+        },
+        "References": [],
+        "Media": {
+          "Images": [],
+          "Videos": []
+        }
+      }
+    }
+  ]
+}
