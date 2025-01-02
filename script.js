@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const speciesSection = document.getElementById('speciesSection');
         const speciesGrid = document.getElementById('speciesGrid');
 
-        // Initialize search functionality
+        // Initialize search functionality (بالاعتماد على الحقول العربية فقط)
         let searchTimeout;
         searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
@@ -44,10 +44,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        function searchTaxonomy(query, taxonomy) {
+        // =========================================================
+        // ===============      دوال البحث      ====================
+        // =========================================================
+        function searchTaxonomy(query, taxonomyData) {
             const results = [];
             
-            taxonomy.forEach(item => {
+            taxonomyData.forEach(item => {
                 const species = item.Species;
                 const matchScore = calculateMatchScore(query, species);
                 
@@ -67,18 +70,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
+            // أعد الخمسة الأوائل حسب الأعلى في درجة التطابق
             return results.sort((a, b) => b.score - a.score).slice(0, 5);
         }
 
         function calculateMatchScore(query, species) {
             let score = 0;
+            // نبحث في الحقول العربية فقط:
             const searchFields = [
                 species.Arabic,
-                species.English,
-                species.Description.Arabic,
-                species.Description.English,
+                species.Description?.Arabic,
+                species.Habitat?.Arabic,
                 ...(species.LocalNames?.Arabic || []),
-                ...(species.LocalNames?.English || []),
                 ...(species.LocalNames?.Regional?.map(r => r.Name) || [])
             ];
 
@@ -86,44 +89,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!field) return;
                 const fieldLower = field.toLowerCase();
                 if (fieldLower.includes(query)) {
-                    // Give higher score for matches in name vs description
-                    score += index < 2 ? 4 : // Official names
-                            index < 4 ? 2 : // Descriptions
-                            3; // Local names
-                    // Bonus for exact matches
+                    // نعطي وزناً أعلى للاسم العربي الرئيسي (index = 0)
+                    if (index === 0) {
+                        score += 5; 
+                    } else {
+                        score += 3;
+                    }
+                    // مكافأة للتطابق التام
                     if (fieldLower === query) score += 5;
-                    // Bonus for starts with
+                    // مكافأة عند بداية السطر
                     if (fieldLower.startsWith(query)) score += 2;
                 }
             });
 
             return score;
-        }
-
-        function formatLocalNames(localNames) {
-            if (!localNames) return '';
-            
-            const parts = [];
-            
-            // Add Arabic local names
-            if (localNames.Arabic?.length > 0) {
-                parts.push(`(${localNames.Arabic.join(' - ')})`);
-            }
-            
-            // Add English local names
-            if (localNames.English?.length > 0) {
-                parts.push(`(${localNames.English.join(' - ')})`);
-            }
-            
-            // Add Regional names with their regions
-            if (localNames.Regional?.length > 0) {
-                const regionalParts = localNames.Regional.map(r => 
-                    `${r.Name} (${r.Region})`
-                );
-                parts.push(`(${regionalParts.join(' - ')})`);
-            }
-            
-            return parts.join(' ');
         }
 
         function displaySearchResults(results, query) {
@@ -134,18 +113,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const resultsHtml = results.map(result => {
                 const { species, path } = result;
-                const pathString = `${path.kingdom.Arabic} > ${path.phylum.Arabic} > ${path.class.Arabic} > ${path.order.Arabic} > ${path.family.Arabic} > ${path.genus.Arabic}`;
-                const localNamesString = formatLocalNames(species.LocalNames);
+                const pathString = `
+                  ${path.kingdom.Arabic} >
+                  ${path.phylum.Arabic} >
+                  ${path.class.Arabic} >
+                  ${path.order.Arabic} >
+                  ${path.family.Arabic} >
+                  ${path.genus.Arabic}
+                `;
                 
+                // صياغة الأسماء المحلية (عربية فقط)
+                const localNamesString = formatLocalNames(species.LocalNames);
+
                 return `
-                    <div class="search-result-item" data-path='${JSON.stringify(path)}' data-species='${JSON.stringify(species)}'>
+                    <div class="search-result-item"
+                         data-path='${JSON.stringify(path)}'
+                         data-species='${JSON.stringify(species)}'>
                         <div class="result-name-ar">
                             ${highlightText(species.Arabic, query)}
-                            ${localNamesString ? `<span class="local-names">${highlightText(localNamesString, query)}</span>` : ''}
+                            ${
+                              localNamesString
+                                ? `<span class="local-names">${highlightText(localNamesString, query)}</span>`
+                                : ''
+                            }
                         </div>
-                        <div class="result-name-en">
-                            ${highlightText(species.English, query)}
-                        </div>
+                        <!-- حذف/تعطيل أي عرض للاسم الإنجليزي للنوع -->
+                        <!-- <div class="result-name-en"></div> -->
+
                         <div class="result-path">${pathString}</div>
                     </div>
                 `;
@@ -170,6 +164,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return text.replace(regex, '<span class="highlight">$1</span>');
         }
 
+        // =========================================================
+        // ==========   اختيار مسار التصنيف من البحث   =============
+        // =========================================================
         async function selectTaxonomyPath(path, selectedSpecies) {
             // Select each level in sequence
             for (const [level, value] of Object.entries(path)) {
@@ -180,22 +177,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             searchResults.classList.remove('show');
             searchInput.value = '';
 
-            // Wait a bit for the content to be rendered
+            // انتظر قليلاً حتى يتم تحميل الكروت
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Find all species cards
+            // ابحث عن الكارت المطابق
             const cards = document.querySelectorAll('.species-card');
             let matchingCard = null;
 
-            // Find the card that matches the selected species
             for (const card of cards) {
                 const arabicName = card.querySelector('.species-name-ar')?.textContent;
-                const englishName = card.querySelector('.species-name-en')?.textContent;
-                
-                if (selectedSpecies && (
-                    arabicName === selectedSpecies.Arabic ||
-                    englishName === selectedSpecies.English
-                )) {
+                // لن نعتمد على الاسم الإنجليزي
+                if (selectedSpecies && (arabicName === selectedSpecies.Arabic)) {
                     matchingCard = card;
                     break;
                 }
@@ -203,16 +195,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // If we found a matching card, scroll to it and open details
             if (matchingCard) {
-                // Scroll into view
                 matchingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Add highlight effect
                 matchingCard.classList.add('highlight-species');
                 setTimeout(() => {
                     matchingCard.classList.remove('highlight-species');
                 }, 1500);
-                
-                // Find and click the details button to open it
+
+                // فتح التفاصيل
                 const detailsBtn = matchingCard.querySelector('.show-details-btn');
                 const detailsSection = matchingCard.querySelector('.species-details');
                 if (detailsBtn && detailsSection) {
@@ -222,7 +211,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // =========================================================
+        // =============   إنشاء الكروت وعرض المعلومات   ===========
+        // =========================================================
+        function formatLocalNames(localNames) {
+            if (!localNames) return '';
+            const parts = [];
+            
+            // الأسماء العربية
+            if (localNames.Arabic?.length > 0) {
+                parts.push(`(${localNames.Arabic.join(' - ')})`);
+            }
+            
+            // الأسماء الإقليمية
+            if (localNames.Regional?.length > 0) {
+                const regionalParts = localNames.Regional.map(r => 
+                    `${r.Name} (${r.Region})`
+                );
+                parts.push(`(${regionalParts.join(' - ')})`);
+            }
+            
+            return parts.join(' ');
+        }
+
         function generateClassificationString(taxonomyItem) {
+            // هنا نعرض التصنيفات بالعربية والإنجليزية فقط للمستويات
             const levels = {
                 Kingdom: { ar: "مملكة", en: "Kingdom" },
                 Phylum: { ar: "شعبة", en: "Phylum" },
@@ -232,15 +245,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 Genus: { ar: "جنس", en: "Genus" }
             };
 
-            // Generate Arabic classification
+            // Arabic classification
             const arabicParts = Object.entries(levels).map(([level, names]) => 
                 `${names.ar} ${taxonomyItem[level].Arabic}`
             );
             const arabicString = arabicParts.join(" - ");
 
-            // Generate English classification
-            const englishParts = Object.entries(levels).map(([level, names]) => 
-                `${names.en} ${taxonomyItem[level].English}`
+            // English classification
+            const englishParts = Object.entries(levels).map(([level, names]) =>
+                // في حال عدم وجود أي قيمة إنجليزية، استخدم فراغ بدلًا من undefined
+                `${names.en} ${taxonomyItem[level].English || ''}`
             );
             const englishString = englishParts.join(" - ");
 
@@ -254,42 +268,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             const template = document.getElementById('speciesCardTemplate');
             const card = template.content.cloneNode(true);
             
-            // Set basic information
+            // الاسم العربي
             card.querySelector('.species-name-ar').textContent = species.Arabic;
-            card.querySelector('.species-name-en').textContent = species.English;
-            
-            // Add local names if available
+
+            // (إن لم تعد بحاجة لعرض الاسم الإنجليزي في الكارت، احذف السطر التالي أو العنصر من الـHTML)
+            // card.querySelector('.species-name-en').style.display = 'none';
+
+            // الأسماء المحلية
             const localNamesString = formatLocalNames(species.LocalNames);
             if (localNamesString) {
                 const localNamesElement = document.createElement('div');
                 localNamesElement.className = 'species-local-names';
                 localNamesElement.innerHTML = localNamesString;
-                card.querySelector('.species-name-en').after(localNamesElement);
+                // ندرجها بعد الاسم العربي
+                card.querySelector('.species-name-ar').after(localNamesElement);
             }
             
-            // Set detailed information
+            // الوصف (عربي فقط)
             card.querySelector('.species-description').innerHTML = `
-                ${species.Description.Arabic}<br>
-                <small class="text-muted">${species.Description.English}</small>
+                ${species.Description?.Arabic || '—'}<br>
             `;
             
+            // الموطن (عربي فقط)
             card.querySelector('.species-habitat').innerHTML = `
-                ${species.Habitat.Arabic}<br>
-                <small class="text-muted">${species.Habitat.English}</small>
+                ${species.Habitat?.Arabic || '—'}<br>
             `;
             
-            // Generate and set classification string
+            // التصنيف بالعربية والإنجليزية (للمستويات فقط)
             const classification = generateClassificationString(taxonomyItem);
             card.querySelector('.species-classification').innerHTML = `
                 <div class="text-end mb-2">${classification.Arabic}</div>
                 <small class="text-muted">${classification.English}</small>
             `;
             
-            // Set references and media
+            // المراجع والوسائط
             const referencesContainer = card.querySelector('.species-references');
             
-            // Add references
-            const references = species.References.map(ref => `
+            const references = (species.References || []).map(ref => `
                 <a href="${ref.URL}" 
                    target="_blank" 
                    class="${ref.Type === 'reference' ? 'reference-link' : 'image-link'}"
@@ -299,7 +314,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </a>
             `);
 
-            // Add media if available
+            // الوسائط (صور + فيديو) - نعرض captions بالعربية
             if (species.Media) {
                 if (species.Media.Images) {
                     references.push(...species.Media.Images.map(img => `
@@ -307,9 +322,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                            target="_blank" 
                            class="image-link"
                            rel="noopener noreferrer"
-                           title="${img.Caption.Arabic} | ${img.Caption.English}">
+                           title="${img.Caption?.Arabic || ''}">
                             <i class="bi bi-image"></i>
-                            ${img.Caption.Arabic}
+                            ${img.Caption?.Arabic || 'صورة'}
                         </a>
                     `));
                 }
@@ -320,9 +335,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                            target="_blank" 
                            class="video-link"
                            rel="noopener noreferrer"
-                           title="${video.Caption.Arabic} | ${video.Caption.English}">
+                           title="${video.Caption?.Arabic || ''}">
                             <i class="bi bi-play-circle"></i>
-                            ${video.Caption.Arabic}
+                            ${video.Caption?.Arabic || 'فيديو'}
                         </a>
                     `));
                 }
@@ -330,7 +345,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             referencesContainer.innerHTML = references.join('');
             
-            // Add toggle functionality
+            // زر إظهار التفاصيل
             const detailsBtn = card.querySelector('.show-details-btn');
             const detailsSection = card.querySelector('.species-details');
             
@@ -348,6 +363,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return card;
         }
 
+        // =========================================================
+        // ============= تعبئة الـ Select والفلترة =================
+        // =========================================================
         function fillSelect(select, options) {
             const fragment = document.createDocumentFragment();
             const defaultOption = document.createElement('option');
@@ -355,11 +373,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             defaultOption.textContent = 'اختر... | Select...';
             fragment.appendChild(defaultOption);
 
-            // التحقق من أن المستوى السابق محدد
             const levels = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus'];
             const currentLevel = Object.entries(selects).find(([_, s]) => s === select)[0];
             const currentIndex = levels.indexOf(currentLevel);
             
+            // لو المستوى السابق غير محدد، نعطله
             if (currentIndex > 0) {
                 const previousSelect = selects[levels[currentIndex - 1]];
                 if (!previousSelect.value) {
@@ -371,10 +389,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             
             select.disabled = false;
-            options.sort(englishSort);
-            
+            options.sort(englishSort);  // ترتيب حسب الاسم الإنجليزي للتصنيف
+
             options.forEach(option => {
                 const opt = document.createElement('option');
+                // نعتمد على Arabic + English في عرض التصنيف فقط
                 opt.value = JSON.stringify(option);
                 opt.textContent = `${option.Arabic} | ${option.English}`;
                 fragment.appendChild(opt);
@@ -384,29 +403,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             select.appendChild(fragment);
         }
 
+        // ترتيب العناصر حسب الاسم الإنجليزي (للمستويات فقط)
+        function englishSort(a, b) {
+            return (a.English || '').localeCompare(b.English || '');
+        }
+
         async function handleSelection(changedLevel) {
             const levels = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus'];
             const currentIndex = levels.indexOf(changedLevel);
             
-            // Reset subsequent selections
+            // إعادة تعيين المستويات اللاحقة
             for (let i = currentIndex + 1; i < levels.length; i++) {
                 const selectElement = selects[levels[i]];
                 selectElement.innerHTML = '<option value="">اختر... | Select...</option>';
-                selectElement.disabled = true; // تعطيل المستويات التالية
+                selectElement.disabled = true;
                 selectElement.parentElement.classList.remove('active');
             }
 
-            // Hide species section
+            // إخفاء قسم الأنواع
             speciesSection.classList.remove('show');
 
-            // التحقق من أن جميع المستويات السابقة محددة
+            // التأكد من تحديد جميع المستويات السابقة
             for (let i = 0; i < currentIndex; i++) {
                 if (!selects[levels[i]].value) {
-                    return; // الخروج إذا كان أي مستوى سابق غير محدد
+                    return;
                 }
             }
 
-            // Filter data based on current selections
+            // فلترة البيانات حسب الاختيارات
             let filteredData = taxonomy;
             for (let i = 0; i <= currentIndex; i++) {
                 const level = levels[i];
@@ -414,12 +438,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (selected) {
                     const selectedValue = JSON.parse(selected);
                     filteredData = filteredData.filter(item => 
+                        // نعتمد على اسم التصنيف بالإنجليزية
                         item[level.charAt(0).toUpperCase() + level.slice(1)].English === selectedValue.English
                     );
                 }
             }
 
-            // Populate next level if available
+            // ملء المستوى التالي إن وُجد
             if (currentIndex < levels.length - 1) {
                 const nextLevel = levels[currentIndex + 1];
                 const nextLevelKey = nextLevel.charAt(0).toUpperCase() + nextLevel.slice(1);
@@ -430,20 +455,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 
                 const nextSelect = selects[nextLevel];
-                nextSelect.disabled = false; // تفعيل المستوى التالي فقط
+                nextSelect.disabled = false;
                 fillSelect(nextSelect, Array.from(uniqueOptions).map(o => JSON.parse(o)));
                 nextSelect.parentElement.classList.add('active');
             }
 
-            // Show species if all levels are selected
+            // عرض الأنواع (species) إن وصلنا للمستوى الأخير
             if (currentIndex === levels.length - 1 && selects[changedLevel].value) {
                 speciesGrid.innerHTML = '';
-                
                 const fragment = document.createDocumentFragment();
                 filteredData.forEach(item => {
                     fragment.appendChild(createSpeciesCard(item.Species, item));
                 });
-                
                 speciesGrid.appendChild(fragment);
                 speciesSection.classList.add('show');
             }
@@ -451,7 +474,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return new Promise(resolve => setTimeout(resolve, 0));
         }
 
-        // Initialize the first select (Kingdom)
+        // =========================================================
+        // =============  تهيئة المستوى الأول + الأحداث  ==========
+        // =========================================================
         const uniqueKingdoms = new Set();
         taxonomy.forEach(item => {
             uniqueKingdoms.add(JSON.stringify(item.Kingdom));
@@ -463,36 +488,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             select.addEventListener('change', () => handleSelection(level));
         });
 
-        // دالة للترتيب بناءً على الاسم الإنجليزي
-        function englishSort(a, b) {
-            return (a.English || '').localeCompare(b.English || '');
-        }
-
-        function displaySpecies(speciesList) {
-            const container = document.getElementById('species-container');
-            container.innerHTML = '';
-            
-            if (!speciesList || speciesList.length === 0) {
-                container.innerHTML = '<div class="no-species">لا توجد أنواع متاحة</div>';
-                return;
-            }
-
-            // ترتيب الأنواع أبجدياً بناءً على الاسم الإنجليزي
-            speciesList.sort(englishSort);
-
-            const speciesHtml = speciesList.map(species => {
-                return `
-                    <div class="species-card">
-                        <div class="species-name-ar">${species.Arabic}</div>
-                        <div class="species-name-en">${species.English}</div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = speciesHtml;
-        }
-
-        // Update last modified date in footer
+        // =========================================================
+        //   دالة اختيارية لتحديث تاريخ آخر تعديل (في الفوتر)
+        // =========================================================
         async function updateLastModified() {
             try {
                 const response = await fetch('t.json');
@@ -512,8 +510,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Call on page load
+        // استدعِ الدالة إن كان لديك عنصر في الفوتر يعرض آخر تعديل
         updateLastModified();
+
     } catch (error) {
         console.error('Error loading taxonomy data:', error);
     }
