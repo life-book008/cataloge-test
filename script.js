@@ -76,29 +76,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         function calculateMatchScore(query, species) {
             let score = 0;
-            // نبحث في الحقول العربية فقط:
+            // البحث في جميع الحقول العربية والإنجليزية
             const searchFields = [
                 species.Arabic,
+                species.English,
                 species.Description?.Arabic,
+                species.Description?.English,
                 species.Habitat?.Arabic,
+                species.Habitat?.English,
                 ...(species.LocalNames?.Arabic || []),
+                ...(species.LocalNames?.English || []),
                 ...(species.LocalNames?.Regional?.map(r => r.Name) || [])
             ];
 
+            // تنظيف النص المدخل
+            query = query.trim().toLowerCase();
+            
             searchFields.forEach((field, index) => {
                 if (!field) return;
-                const fieldLower = field.toLowerCase();
-                if (fieldLower.includes(query)) {
-                    // نعطي وزناً أعلى للاسم العربي الرئيسي (index = 0)
-                    if (index === 0) {
-                        score += 5; 
+                
+                const fieldLower = field.toString().toLowerCase();
+                
+                // التطابق التام
+                if (fieldLower === query) {
+                    score += 10;
+                }
+                // البداية بالنص المدخل
+                else if (fieldLower.startsWith(query)) {
+                    score += 8;
+                }
+                // يحتوي على النص المدخل
+                else if (fieldLower.includes(query)) {
+                    // وزن أعلى للاسم الرئيسي (العربي والإنجليزي)
+                    if (index <= 1) {
+                        score += 6;
                     } else {
-                        score += 3;
+                        score += 4;
                     }
-                    // مكافأة للتطابق التام
-                    if (fieldLower === query) score += 5;
-                    // مكافأة عند بداية السطر
-                    if (fieldLower.startsWith(query)) score += 2;
+                }
+                
+                // البحث عن كلمات منفصلة
+                const queryWords = query.split(/\s+/);
+                if (queryWords.length > 1) {
+                    const fieldWords = fieldLower.split(/\s+/);
+                    queryWords.forEach(word => {
+                        if (fieldWords.some(fw => fw.includes(word))) {
+                            score += 2;
+                        }
+                    });
                 }
             });
 
