@@ -132,45 +132,42 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         function displaySearchResults(results, query) {
             if (results.length === 0) {
-                searchResults.classList.remove('show');
+                searchResults.innerHTML = '<div class="search-result-item">لا توجد نتائج</div>';
+                searchResults.classList.add('show');
                 return;
             }
 
-            const resultsHtml = results.map(result => {
+            const html = results.map(result => {
                 const { species, path } = result;
+                
+                // تجهيز مسار التصنيف
                 const pathString = `
-                  ${path.kingdom.Arabic} >
-                  ${path.phylum.Arabic} >
-                  ${path.class.Arabic} >
-                  ${path.order.Arabic} >
-                  ${path.family.Arabic} >
-                  ${path.genus.Arabic}
+                    ${path.kingdom.Arabic} >
+                    ${path.phylum.Arabic} >
+                    ${path.class.Arabic} >
+                    ${path.order.Arabic} >
+                    ${path.family.Arabic} >
+                    ${path.genus.Arabic}
                 `;
                 
-                // صياغة الأسماء المحلية (عربية فقط)
+                // صياغة الأسماء المحلية
                 const localNamesString = formatLocalNames(species.LocalNames);
 
                 return `
-                    <div class="search-result-item"
-                         data-path='${JSON.stringify(path)}'
-                         data-species='${JSON.stringify(species)}'>
+                    <div class="search-result-item" data-path='${JSON.stringify(path)}' data-species='${JSON.stringify(species)}'>
                         <div class="result-name-ar">
                             ${highlightText(species.Arabic, query)}
-                            ${
-                              localNamesString
-                                ? `<span class="local-names">${highlightText(localNamesString, query)}</span>`
-                                : ''
-                            }
+                            ${localNamesString ? `<span class="local-names">${highlightText(localNamesString, query)}</span>` : ''}
                         </div>
-                        <!-- حذف/تعطيل أي عرض للاسم الإنجليزي للنوع -->
-                        <!-- <div class="result-name-en"></div> -->
-
+                        <div class="result-name-en">
+                            ${highlightText(species.English, query)}
+                        </div>
                         <div class="result-path">${pathString}</div>
                     </div>
                 `;
             }).join('');
 
-            searchResults.innerHTML = resultsHtml;
+            searchResults.innerHTML = html;
             searchResults.classList.add('show');
 
             // Add click handlers to results
@@ -295,9 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // الاسم العربي
             card.querySelector('.species-name-ar').textContent = species.Arabic;
-
-            // (إن لم تعد بحاجة لعرض الاسم الإنجليزي في الكارت، احذف السطر التالي أو العنصر من الـHTML)
-            // card.querySelector('.species-name-en').style.display = 'none';
+            card.querySelector('.species-name-en').textContent = species.English;
 
             // الأسماء المحلية
             const localNamesString = formatLocalNames(species.LocalNames);
